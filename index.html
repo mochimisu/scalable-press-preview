@@ -214,12 +214,40 @@
           width: 1000,
           height: 1000
         });
+        layer = new Kinetic.Layer();
+        texture = new THREE.Texture(layer.getCanvas()._canvas);
+        var manager = new THREE.LoadingManager();
+        var loader = new THREE.OBJLoader(manager);
+        // add models
+        Object.keys(modelInfo).forEach(function(modelName) {
+            var model = modelInfo[modelName];
+            loader.load(model.file, function ( object ) {
+              object.traverse( function ( child ) {
+                if ( child instanceof THREE.Mesh ) {
+                  child.material.map = texture;
+                }
+              } );
+              object.position.y = model.objYOffset;
+              object.scale.set(model.objScale[0],
+                model.objScale[1],
+                model.objScale[2]);
+              object.rotation.x = model.objRotate[0];
+              object.rotation.y = model.objRotate[1];
+              object.rotation.z = model.objRotate[2];
+              object.visible = false;
+              object.name = modelName;
+              models.add(object);
 
-        function drawImage(imageObj) { 
-          layer = new Kinetic.Layer();
-          texture = new THREE.Texture(layer.getCanvas()._canvas);
+              $('ul#models').append(
+                $('<li>'+modelName+'</li>').click(function() {
+                  selectModel(modelName)}));
+            });
+        });
+
+        function drawImage(imageObj) {
           // todo: bg rect should be written in the shader so that our
           // canvas is transp
+          layer.removeChildren();
           bgRect = new Kinetic.Rect({
               x: 0,
               y: 0,
@@ -259,34 +287,6 @@
           texture.needsUpdate = true;
 
           stage.add(layer);
-          var manager = new THREE.LoadingManager();
-          var loader = new THREE.OBJLoader(manager);
-          // add models
-          Object.keys(modelInfo).forEach(function(modelName) {
-              var model = modelInfo[modelName];
-              loader.load(model.file, function ( object ) {
-                object.traverse( function ( child ) {
-                  if ( child instanceof THREE.Mesh ) {
-                    child.material.map = texture;
-                  }
-                } );
-                object.position.y = model.objYOffset;
-                object.scale.set(model.objScale[0],
-                  model.objScale[1],
-                  model.objScale[2]);
-                object.rotation.x = model.objRotate[0];
-                object.rotation.y = model.objRotate[1];
-                object.rotation.z = model.objRotate[2];
-                object.visible = false;
-                object.name = modelName;
-                models.add(object);
-
-                $('ul#models').append(
-                  $('<li>'+modelName+'</li>').click(function() {
-                    selectModel(modelName)}));
-              } );
-
-          });
         }
 
         var imageObj = new Image();
