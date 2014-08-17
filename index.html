@@ -33,6 +33,9 @@
           <div class="windowLabel">
             <h1>Modify</h1>
           </div>
+          <div class="commands">
+            <input type="file" id="imageLoader" name="imageLoader">
+          </div>
           <div id="cropCanvas">
             <div id="canvasContainer"></div>
           </div>
@@ -147,11 +150,8 @@
 
           // fit the aspect ratio to the element size
           var aspectRatio = model.canvasAspect;
-          console.log(aspectRatio);
           var croppedAspectRatio = (1 - model.leftMargin - model.rightMargin)
             / (1 - model.topMargin - model.bottomMargin) * aspectRatio;
-          console.log('aa');
-            console.log(croppedAspectRatio);
           var width = maxW;
           var height = maxH;
           if (maxH * croppedAspectRatio > maxW) {
@@ -167,8 +167,6 @@
           var canvasWidth = width/(1 - model.leftMargin - model.rightMargin);
           var canvasHeight = height/(1 - model.topMargin - model.bottomMargin);
 
-          console.log(canvasWidth);
-          console.log(canvasHeight);
           stage.setWidth(canvasWidth);
           stage.setHeight(canvasHeight);
           bgRect.setWidth(canvasWidth);
@@ -186,11 +184,9 @@
           $('#cropCanvas').width(width);
 
           // reposition overlay image , todo: if its outside
-          console.log(dragImg.position());
           dragImg.position({
               x: canvasWidth * model.leftMargin,
               y: canvasHeight * model.topMargin});
-          console.log(dragImg.position());
           layer.draw();
 
           // needs to happen when the canvas actually updates
@@ -303,6 +299,21 @@
         // todo: user upload image thing
         imageObj.src = 'tex/ooshirts-logo.png';
 
+        var imageLoader = $('#imageLoader');
+        imageLoader.change(handleImage);
+
+        function handleImage(e){
+          var reader = new FileReader();
+          reader.onload = function(event){
+            var img = new Image();
+            img.onload = function(){
+              drawImage(img);
+            }
+            img.src = event.target.result;
+          }
+          reader.readAsDataURL(e.target.files[0]);     
+        }
+
       }
 
       function onWindowResize() {
@@ -364,6 +375,7 @@
         camera.lookAt( scene.position );
 
         renderer.render( scene, camera );
+
 
       }
 
