@@ -8,7 +8,6 @@
   </head>
 
   <body>
-
     <div id="pageContainer">
       <div id="info">
         <h1>
@@ -60,11 +59,15 @@
     <script src="js/loaders/OBJLoader.js"></script>
 
     <script src="js/Detector.js"></script>
-    <!-- <script src="js/libs/stats.min.js"></script> -->
 
     <script>
+      // if youre reading this code, i can only pray for your soul
+
+      // place to jam information about the current selection to be posted
+      // to the server
       var currentSelection = {};
 
+      // all the information about the objects we can preview on
       var modelInfo = {
         shirt: {
           file: 'models/testshirt.obj',
@@ -130,12 +133,15 @@
         // create dom elems
         container = $('#glContainer');
 
-        camera = new THREE.PerspectiveCamera( 45, window.innerWidth  / 2/ window.innerHeight, 1, 2000 );
+        // hack: width=2 beacuse our render view is always half the window
+        camera = new THREE.PerspectiveCamera( 45, window.innerWidth/2
+            / window.innerHeight, 1, 2000 );
         camera.position.z = 100;
 
         // scene
         scene = new THREE.Scene();
 
+        // lighting
         var ambient = new THREE.AmbientLight( 0x444444 );
         scene.add( ambient );
 
@@ -144,12 +150,12 @@
         scene.add( directionalLight );
 
         // model
-
         THREE.Loader.Handlers.add( /\.dds$/i, new THREE.DDSLoader() );
 
         models = new THREE.Object3D();
         scene.add(models);
 
+        // select a model by name
         var selectModel = function(name) {
           currentSelection.modelName = name;
           // find model info
@@ -195,7 +201,7 @@
             models.children[i].visible = models.children[i].name == name;
           }
 
-          // canvas crop
+          // canvas crop ond size to appropriate UV map size/crop
 
           // resize canvas
           // find element sizes
@@ -282,18 +288,20 @@
         }
 
 
+        // renderer settings
         renderer = new THREE.WebGLRenderer();
         renderer.setClearColor(0xe6e6e6,1);
         renderer.setSize( window.innerWidth/2, window.innerHeight );
         container[0].appendChild( renderer.domElement );
 
+        // mouse move interactions
         container.mousedown(onContainerMouseDown);
         container.mouseup(onContainerMouseUp);
         document.addEventListener( 'mousemove', onDocumentMouseMove, false );
         window.addEventListener( 'resize', onWindowResize, false );
 
 
-        // create kinetic canvas
+        // create kinetic canvas, for html canvas authoring
         // copypasta for scale
         function updateDragImageScale(activeAnchor) {
           var group = activeAnchor.getParent();
@@ -384,11 +392,14 @@
           width: 1000,
           height: 1000
         });
+
         layer = new Kinetic.Layer();
         texture = new THREE.Texture(layer.getCanvas()._canvas);
         var manager = new THREE.LoadingManager();
         var loader = new THREE.OBJLoader(manager);
-        // add models
+
+
+        // add models, and assign the canvas texture to them
         material = new THREE.MeshPhongMaterial();
         material.map = texture;
         material.specular = new THREE.Color(0,0,0);
@@ -417,6 +428,7 @@
             });
         });
 
+        // callback to reset html canvas with a draggable image obj
         function drawImage(imageObj) {
           currentSelection.image = imageObj.src;
           // todo: bg rect should be written in the shader so that our
@@ -470,6 +482,7 @@
           stage.add(layer);
 
           // TODO; move this somewhere else
+          // select a model if none have been selected
           if (!modelVisible) {
             selectModel('shirt');
             modelVisible = true;
@@ -478,6 +491,7 @@
           }
         }
 
+        // load default image
         var imageObj = new Image();
         imageObj.onload = function() {
           drawImage(this);
@@ -485,6 +499,7 @@
         // todo: user upload image thing
         imageObj.src = 'tex/ooshirts-logo.png';
 
+        // handle uploaded images
         var imageLoader = $('#imageLoader');
         imageLoader.change(handleImage);
 
@@ -497,7 +512,7 @@
             }
             img.src = event.target.result;
           }
-          reader.readAsDataURL(e.target.files[0]);     
+          reader.readAsDataURL(e.target.files[0]);
         }
 
         // order button
@@ -505,12 +520,14 @@
         $('#order').click(function() {
             console.log(
               'I didn\'t implement a server yet, but this is the info I '
-              + 'would have posted');
+              + 'would have posted. probably along with a screenshot of '
+              + 'the preview render, for accurate placement');
             console.log(currentSelection);
         });
 
       }
 
+      // funcs for the renderer
       function onWindowResize() {
 
         windowHalfX = window.innerWidth / 4;
@@ -543,19 +560,12 @@
         }
       }
 
-      //
-
       function animate() {
-
         requestAnimationFrame( animate );
         render();
-
       }
 
       function render() {
-
-        // camera.position.x += ( mouseX - camera.position.x ) * .05;
-        // camera.position.y += ( - mouseY - camera.position.y ) * .05;
         var radius = 40;
         var freqX = 0.01;
         var freqY = freqX/2;
@@ -568,10 +578,7 @@
             camera.position.z).normalize();
 
         camera.lookAt( scene.position );
-
         renderer.render( scene, camera );
-
-
       }
 
     </script>
