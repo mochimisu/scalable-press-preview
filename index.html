@@ -75,10 +75,10 @@
           objScale: [0.3, 0.3, 0.3],
           objRotate: [0, 0, 0],
 
-          canvasAspect: 3,
-          topMargin: 0,
+          canvasAspect: 1,
+          topMargin: 0.5,
           bottomMargin: 0,
-          leftMargin: 0.1,
+          leftMargin: 0,
           rightMargin: 0
         },
         iphone: {
@@ -90,7 +90,7 @@
           canvasAspect: 1,
           topMargin: 0.1,
           bottomMargin: 0.1,
-          leftMargin: 0.5,
+          leftMargin: 0.45,
           rightMargin: 0
         }
       };
@@ -183,10 +183,22 @@
           $('#cropCanvas').height(height);
           $('#cropCanvas').width(width);
 
+          // resize overlay to 50% of crop window
+          var imgScale = Math.min(
+              width/2 / dragImg.getWidth(),
+              height/2 / dragImg.getHeight());
+          console.log(imgScale);
+          dragImg.scale({
+              x: imgScale,
+              y: imgScale});
+
           // reposition overlay image , todo: if its outside
           dragImg.position({
-              x: canvasWidth * model.leftMargin,
-              y: canvasHeight * model.topMargin});
+              x: (canvasWidth * model.leftMargin)
+                + width/2 - dragImg.getWidth()*imgScale/2,
+              y: (canvasHeight * model.topMargin)
+                + height/2 - dragImg.getHeight()*imgScale/2
+              });
           layer.draw();
 
           // needs to happen when the canvas actually updates
@@ -255,14 +267,10 @@
           layer.add(bgRect);
 
           // draggable image
-          iWidth = imageObj.width;
-          iHeight = imageObj.height;
           dragImg = new Kinetic.Image({
             image: imageObj,
             x: 200,
             y: 330,
-            width: 276,
-            height: 80,
             draggable: true
           });
 
