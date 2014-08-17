@@ -16,15 +16,23 @@
           <span class="normal">Press</span>
           <span class="light">Preview</span>
         </h1>
+        <h2>A hacky hack by <a href="http://www.brandonwang.me">Brandon Wang</a></h2>
+         Preview on: 
         <ul id="models">
         </ul>
       </div>
       <div id="content">
         <div id="left">
+          <div class="windowLabel">
+            <h1>Preview</h1>
+          </div>
           <div id="glContainer">
           </div>
         </div>
         <div id="right">
+          <div class="windowLabel">
+            <h1>Modify</h1>
+          </div>
           <div id="cropCanvas">
             <div id="canvasContainer"></div>
           </div>
@@ -190,6 +198,7 @@
 
 
         renderer = new THREE.WebGLRenderer();
+        renderer.setClearColor(0xe6e6e6,1);
         renderer.setSize( window.innerWidth/2, window.innerHeight );
         container[0].appendChild( renderer.domElement );
 
