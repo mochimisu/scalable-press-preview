@@ -33,8 +33,13 @@
           <div class="windowLabel">
             <h1>Modify</h1>
           </div>
-          <div class="commands">
-            <input type="file" id="imageLoader" name="imageLoader">
+          <div id="commands">
+            <div id="images">
+              Use Image: <input type="file" id="imageLoader" name="imageLoader">
+            </div>
+            Color: 
+            <ul id="colors">
+            </ul>
           </div>
           <div id="cropCanvas">
             <div id="canvasContainer"></div>
@@ -67,7 +72,10 @@
           topMargin: 0.38,
           bottomMargin: 0.1,
           leftMargin: 0,
-          rightMargin: 0.46
+          rightMargin: 0.46,
+
+          //scalablepress stuff
+          productName: 'gildan-cotton-t-shirt',
         },
         mug: {
           file: 'models/mug.obj',
@@ -79,7 +87,10 @@
           topMargin: 0.5,
           bottomMargin: 0,
           leftMargin: 0,
-          rightMargin: 0
+          rightMargin: 0,
+
+          //scalablepress stuff
+          productName: 'beverage-mug',
         },
         iphone: {
           file: 'models/iphone.obj',
@@ -91,7 +102,10 @@
           topMargin: 0.1,
           bottomMargin: 0.1,
           leftMargin: 0.45,
-          rightMargin: 0
+          rightMargin: 0,
+
+          //scalablepress stuff
+          productName: 'i-phone-5-5s-case',
         }
       };
 
@@ -132,16 +146,35 @@
         scene.add(models);
 
         var selectModel = function(name) {
+          // find model info
+          var model = modelInfo[name];
+          // get colors
+          var colors = $('#colors');
+          colors.empty();
+          $.get('https://api.scalablepress.com/v2/products/'+model.productName,
+            function(data) {
+            data.colors.forEach(function(color) {
+              var newColor = $('<li class="color"></li>');
+              newColor.css({
+                backgroundColor: '#'+color.hex
+              })
+              newColor.click(function () {
+                bgRect.fill('#'+color.hex);
+                layer.draw();
+                texture.needsUpdate = true;
+              });
+              colors.append(newColor);
+            });
+          });
+
+
           // visibility of 3d model
           for (var i = 0; i < models.children.length; i++) {
             models.children[i].visible = models.children[i].name == name;
           }
 
-
           // canvas crop
 
-          // find model info
-          var model = modelInfo[name];
 
           // resize canvas
           // find element sizes
