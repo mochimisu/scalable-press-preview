@@ -83,7 +83,7 @@
           objScale: [0.3, 0.3, 0.3],
           objRotate: [0, 0, 0],
 
-          canvasAspect: 1,
+          canvasAspect: 1.25,
           topMargin: 0.5,
           bottomMargin: 0,
           leftMargin: 0,
@@ -151,6 +151,7 @@
           // get colors
           var colors = $('#colors');
           colors.empty();
+          bgRect.fill('white');
           $.get('https://api.scalablepress.com/v2/products/'+model.productName,
             function(data) {
             data.colors.forEach(function(color) {
