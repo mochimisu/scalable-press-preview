@@ -4,46 +4,31 @@
     <title>lol</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-    <style>
-      body {
-        font-family: Monospace;
-        background-color: #000;
-        color: #fff;
-        margin: 0px;
-        overflow: hidden;
-      }
-      #editTexture {
-        position: absolute;
-        width: 50%;
-        height: 100%;
-        right: 0;
-        top: 0;
-        background-color: rgb(0.2,0.2,0.2);
-      }
-      #info {
-        color: #fff;
-        padding: 10px;
-        text-align: center;
-        background-color: rgba(255,255,255,0.3);
-      }
-      #cropCanvas {
-        overflow: hidden;
-      }
-      #canvasContainer {
-        position: relative;
-      }
-    </style>
+    <link href='style.css' rel='stylesheet' type='text/css'>
   </head>
 
   <body>
 
-    <div id="editTexture">
+    <div id="pageContainer">
       <div id="info">
+        <h1>
+          <span class="heavy">Scalable</span>
+          <span class="normal">Press</span>
+          <span class="light">Preview</span>
+        </h1>
         <ul id="models">
         </ul>
       </div>
-      <div id="cropCanvas">
-        <div id="canvasContainer"></div>
+      <div id="content">
+        <div id="left">
+          <div id="glContainer">
+          </div>
+        </div>
+        <div id="right">
+          <div id="cropCanvas">
+            <div id="canvasContainer"></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -82,7 +67,7 @@
           canvasAspect: 3,
           topMargin: 0,
           bottomMargin: 0,
-          leftMargin: 0,
+          leftMargin: 0.1,
           rightMargin: 0
         },
         iphone: {
@@ -104,7 +89,7 @@
       var camera, scene, renderer;
 
       var mouseX = 0, mouseY = 0;
-      var windowHalfX = window.innerWidth / 2;
+      var windowHalfX = window.innerWidth / 4;
       var windowHalfY = window.innerHeight / 2;
 
       init();
@@ -112,12 +97,9 @@
 
       function init() {
         // create dom elems
-        canvas = document.createElement('canvas');
+        container = $('#glContainer');
 
-        container = document.createElement( 'div' );
-        document.body.appendChild( container );
-
-        camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
+        camera = new THREE.PerspectiveCamera( 45, window.innerWidth  / 2/ window.innerHeight, 1, 2000 );
         camera.position.z = 100;
 
         // scene
@@ -151,8 +133,8 @@
 
           // resize canvas
           // find element sizes
-          var maxW = $('#editTexture').width();
-          var maxH = $('#editTexture').height();
+          var maxW = $('#right').width();
+          var maxH = $('#right').height();
 
           // fit the aspect ratio to the element size
           var aspectRatio = model.canvasAspect;
@@ -209,10 +191,10 @@
 
         renderer = new THREE.WebGLRenderer();
         renderer.setSize( window.innerWidth/2, window.innerHeight );
-        container.appendChild( renderer.domElement );
+        container[0].appendChild( renderer.domElement );
 
-        container.addEventListener( 'mousedown', onContainerMouseDown, false );
-        container.addEventListener( 'mouseup', onContainerMouseUp, false );
+        container.mousedown(onContainerMouseDown);
+        container.mouseup(onContainerMouseUp);
         document.addEventListener( 'mousemove', onDocumentMouseMove, false );
         window.addEventListener( 'resize', onWindowResize, false );
 
