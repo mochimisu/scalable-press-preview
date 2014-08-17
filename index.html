@@ -95,6 +95,7 @@
 
       var container, stats, canvas;
       var camera, scene, renderer;
+      var modelVisible = false;
 
       var mouseX = 0, mouseY = 0;
       var windowHalfX = window.innerWidth / 4;
@@ -116,7 +117,7 @@
         var ambient = new THREE.AmbientLight( 0x444444 );
         scene.add( ambient );
 
-        directionalLight = new THREE.DirectionalLight( 0xffeedd );
+        directionalLight = new THREE.DirectionalLight( 0xdddddd );
         directionalLight.position.set( 0, 0, 1 ).normalize();
         scene.add( directionalLight );
 
@@ -287,6 +288,12 @@
           texture.needsUpdate = true;
 
           stage.add(layer);
+
+          // TODO; move this somewhere else
+          if (!modelVisible) {
+            selectModel('shirt');
+            modelVisible = true;
+          }
         }
 
         var imageObj = new Image();
@@ -349,6 +356,10 @@
         camera.position.x = radius*Math.sin(-mouseX*freqX);
         camera.position.z = radius*Math.cos(-mouseX*freqX);// + radius*Math.cos(mouseY*freqY);
         camera.position.y = radius*Math.sin(mouseY*freqY);
+        directionalLight.position.set(
+            camera.position.x,
+            camera.position.y + 40,
+            camera.position.z).normalize();
 
         camera.lookAt( scene.position );
 
