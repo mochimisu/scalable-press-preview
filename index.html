@@ -169,7 +169,7 @@
               function selectColor(color) {
                 // some quick last second hecks for specular
                 if (color.name == 'Gloss') {
-                  material.specular = new THREE.Color(1,1,1);
+                  material.specular = new THREE.Color(0.4, 0.4, 0.4);
                 } else {
                   material.specular = new THREE.Color(0,0,0);
                 }
@@ -209,7 +209,7 @@
           // hecks
           // TODO: height of some real element
           var maxH = $('#right').height() 
-            - $('#right .windowlabel').height() - $('#commands').height()- 100;
+            - $('#right .windowlabel').height() - $('#commands').height()- 50;
 
           // fit the aspect ratio to the element size
           var aspectRatio = model.canvasAspect;
