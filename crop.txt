@@ -1,0 +1,15 @@
+shirt:
+1024x1024
+top: 386
+bottom: 100
+left: 0
+right: 470
+
+iphone:
+2200x1800
+left: 1000
+everywhere else: 0
+
+mug:
+2448x800
+everywhere 0

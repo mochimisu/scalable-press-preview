@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>lol</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+      body {
+        font-family: Monospace;
+        background-color: #000;
+        color: #fff;
+        margin: 0px;
+        overflow: hidden;
+      }
+      #info {
+        color: #fff;
+        position: absolute;
+        padding: 10px;
+        top: 0;
+        left: 0;
+        text-align: center;
+        z-index: 100;
+        display: inline-block;
+        background-color: rgba(255,255,255,0.3);
+      }
+      #container2 {
+        position: absolute;
+        /*width: 400px;
+        height: 600px;*/
+        width: 554px;
+        height: 538px;
+        bottom: 0;
+        right: 0;
+        background-color: white;
+        overflow: hidden;
+      }
+      #container {
+        position: relative;
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <div id="info">
+      <ul id="models">
+      </ul>
+    </div>
+    <div id="container2">
+    <div id="container"></div></div>
+
+    <script src="http://d3lp1msu2r81bx.cloudfront.net/kjs/js/lib/kinetic-v5.0.2.min.js"></script>
+    <script src="js/three.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+
+    <script src="js/loaders/DDSLoader.js"></script>
+    <script src="js/loaders/OBJLoader.js"></script>
+
+    <script src="js/Detector.js"></script>
+    <script src="js/libs/stats.min.js"></script>
+
+    <script>
+
+      var modelInfo = {
+        shirt: {
+          file: 'models/testshirt.obj',
+          objYOffset: 0,
+          objScale: [0.1, 0.1, 0.1],
+          objRotate: [0, 0, 0],
+
+          //todo: relative to size of window
+          canvasWidth: 1024,
+          canvasHeight: 1024,
+          topMargin: 386,
+          bottomMargin: 100,
+          leftMargin: 0,
+          rightMargin: 470
+        },
+        mug: {
+          file: 'models/mug.obj',
+          objYOffset: -7,
+          objScale: [0.3, 0.3, 0.3],
+          objRotate: [0, 0, 0],
+
+          canvasWidth: 612,
+          canvasHeight: 200,
+          topMargin: 0,
+          bottomMargin: 0,
+          leftMargin: 0,
+          rightMargin: 0
+        },
+        iphone: {
+          file: 'models/iphone.obj',
+          objYOffset: 0,
+          objScale: [10, 10, 10],
+          objRotate: [Math.PI/2, 0, Math.PI],
+
+          canvasWidth: 500,
+          canvasHeight: 500,
+          topMargin: 50,
+          bottomMargin: 50,
+          leftMargin: 250,
+          rightMargin: 0
+        }
+      };
+
+
+      var container, stats, canvas;
+      var camera, scene, renderer;
+
+      var mouseX = 0, mouseY = 0;
+      var windowHalfX = window.innerWidth / 2;
+      var windowHalfY = window.innerHeight / 2;
+
+      init();
+      animate();
+
+      function init() {
+        // create dom elems
+        canvas = document.createElement('canvas');
+
+        container = document.createElement( 'div' );
+        document.body.appendChild( container );
+
+        camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
+        camera.position.z = 100;
+
+        // scene
+        scene = new THREE.Scene();
+
+        var ambient = new THREE.AmbientLight( 0x444444 );
+        scene.add( ambient );
+
+        directionalLight = new THREE.DirectionalLight( 0xffeedd );
+        directionalLight.position.set( 0, 0, 1 ).normalize();
+        scene.add( directionalLight );
+
+        // model
+
+        THREE.Loader.Handlers.add( /\.dds$/i, new THREE.DDSLoader() );
+
+        models = new THREE.Object3D();
+        scene.add(models);
+
+        var selectModel = function(name) {
+          // visibility of 3d model
+          for (var i = 0; i < models.children.length; i++) {
+            models.children[i].visible = models.children[i].name == name;
+          }
+
+
+          // canvas crop
+          var model = modelInfo[name];
+
+          // resize canvas
+          stage.setWidth(model.canvasWidth);
+          stage.setHeight(model.canvasHeight);
+          bgRect.setWidth(model.canvasWidth);
+          bgRect.setHeight(model.canvasHeight);
+
+          // reposition cropping divs
+          $('#container').css({
+              top: -model.topMargin,
+              left: -model.leftMargin
+              });
+
+          // resize cropping div
+          $('#container2').height(model.canvasHeight - model.topMargin - model.bottomMargin);
+          $('#container2').width(model.canvasWidth - model.leftMargin - model.rightMargin);
+
+          // reposition overlay image , todo: if its outside
+          console.log(dragImg.position());
+          dragImg.position({
+              x: model.leftMargin,
+              y: model.topMargin});
+          console.log(dragImg.position());
+          layer.draw();
+
+          //needs to happen when the canvas actually updates
+          texture.needsUpdate = true;
+        }
+
+
+        renderer = new THREE.WebGLRenderer();
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        container.appendChild( renderer.domElement );
+
+        container.addEventListener( 'mousedown', onContainerMouseDown, false );
+        container.addEventListener( 'mouseup', onContainerMouseUp, false );
+        document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+        window.addEventListener( 'resize', onWindowResize, false );
+
+
+        // create kinect canvas
+        var stage = new Kinetic.Stage({
+          container: "container",
+          width: 1000,
+          height: 1000
+        });
+
+        function drawImage(imageObj) { 
+          layer = new Kinetic.Layer();
+          texture = new THREE.Texture(layer.getCanvas()._canvas);
+          // todo: bg rect should be written in the shader so that our
+          // canvas is transp
+          bgRect = new Kinetic.Rect({
+              x: 0,
+              y: 0,
+              width: 1000, //full width
+              height: 1000, //full height
+              fill: 'white', //background color
+              });
+          layer.add(bgRect);
+
+          // draggable image
+          iWidth = imageObj.width;
+          iHeight = imageObj.height;
+          dragImg = new Kinetic.Image({
+            image: imageObj,
+            x: 200,
+            y: 330,
+            width: 276,
+            height: 80,
+            draggable: true
+          });
+
+          // add cursor styling
+          dragImg.on('mouseover', function() {
+            document.body.style.cursor = 'pointer';
+          });
+          dragImg.on('mouseout', function() {
+            document.body.style.cursor = 'default';
+            texture.needsUpdate = true;
+          });
+
+          dragImg.on('dragmove', function() {
+              texture.needsUpdate = true;
+          });
+
+          layer.add(dragImg);
+
+          texture.needsUpdate = true;
+
+          stage.add(layer);
+          var manager = new THREE.LoadingManager();
+          var loader = new THREE.OBJLoader(manager);
+          // add models
+          Object.keys(modelInfo).forEach(function(modelName) {
+              var model = modelInfo[modelName];
+              loader.load(model.file, function ( object ) {
+                object.traverse( function ( child ) {
+                  if ( child instanceof THREE.Mesh ) {
+                    child.material.map = texture;
+                  }
+                } );
+                object.position.y = model.objYOffset;
+                object.scale.set(model.objScale[0],
+                  model.objScale[1],
+                  model.objScale[2]);
+                object.rotation.x = model.objRotate[0];
+                object.rotation.y = model.objRotate[1];
+                object.rotation.z = model.objRotate[2];
+                object.visible = false;
+                object.name = modelName;
+                models.add(object);
+
+                $('ul#models').append(
+                  $('<li>'+modelName+'</li>').click(function() {
+                    selectModel(modelName)}));
+              } );
+
+          });
+        }
+
+        var imageObj = new Image();
+        imageObj.onload = function() {
+          drawImage(this);
+        };
+        imageObj.src = 'tex/ooshirts-logo.png';
+
+
+
+      }
+
+      function onWindowResize() {
+
+        windowHalfX = window.innerWidth / 2;
+        windowHalfY = window.innerHeight / 2;
+
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+
+        renderer.setSize( window.innerWidth, window.innerHeight );
+
+      }
+
+      clicked = false;
+      mouseDownX = 0;
+      mouseDownY = 0;
+      function onContainerMouseDown( event ) {
+        clicked = true;
+        mouseDownX = event.clientX;
+        mouseDownY = event.clientY;
+      }
+      function onContainerMouseUp( event ) {
+        clicked = false;
+      }
+      function onDocumentMouseMove( event ) {
+        if (clicked) {
+          mouseX += (event.clientX - mouseDownX);
+          mouseY += (event.clientY - mouseDownY);
+          mouseDownX = event.clientX;
+          mouseDownY = event.clientY;
+        }
+      }
+
+      //
+
+      function animate() {
+
+        requestAnimationFrame( animate );
+        render();
+
+      }
+
+      function render() {
+
+        // camera.position.x += ( mouseX - camera.position.x ) * .05;
+        // camera.position.y += ( - mouseY - camera.position.y ) * .05;
+        var radius = 40;
+        var freqX = 0.01;
+        var freqY = freqX/2;
+        camera.position.x = radius*Math.sin(-mouseX*freqX);
+        camera.position.z = radius*Math.cos(-mouseX*freqX);// + radius*Math.cos(mouseY*freqY);
+        camera.position.y = radius*Math.sin(mouseY*freqY);
+
+        camera.lookAt( scene.position );
+
+        renderer.render( scene, camera );
+
+      }
+
+    </script>
+
+  </body>
+</html>

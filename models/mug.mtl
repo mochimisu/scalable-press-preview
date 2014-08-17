@@ -1,0 +1,8 @@
+newmtl mug
+illum 4
+Kd 1.00 1.00 1.00
+Ka 1.00 1.00 1.00
+Tf 1.00 1.00 1.00
+map_Kd ../tex/mug.jpg
+Ni 1.00
+Ks 0.20 0.20 0.20
