@@ -12,29 +12,24 @@
         margin: 0px;
         overflow: hidden;
       }
+      #editTexture {
+        position: absolute;
+        width: 50%;
+        height: 100%;
+        right: 0;
+        top: 0;
+        background-color: rgb(0.2,0.2,0.2);
+      }
       #info {
         color: #fff;
-        position: absolute;
         padding: 10px;
-        top: 0;
-        left: 0;
         text-align: center;
-        z-index: 100;
-        display: inline-block;
         background-color: rgba(255,255,255,0.3);
       }
-      #container2 {
-        position: absolute;
-        /*width: 400px;
-        height: 600px;*/
-        width: 554px;
-        height: 538px;
-        bottom: 0;
-        right: 0;
-        background-color: white;
+      #cropCanvas {
         overflow: hidden;
       }
-      #container {
+      #canvasContainer {
         position: relative;
       }
     </style>
@@ -42,12 +37,15 @@
 
   <body>
 
-    <div id="info">
-      <ul id="models">
-      </ul>
+    <div id="editTexture">
+      <div id="info">
+        <ul id="models">
+        </ul>
+      </div>
+      <div id="cropCanvas">
+        <div id="canvasContainer"></div>
+      </div>
     </div>
-    <div id="container2">
-    <div id="container"></div></div>
 
     <script src="http://d3lp1msu2r81bx.cloudfront.net/kjs/js/lib/kinetic-v5.0.2.min.js"></script>
     <script src="js/three.min.js"></script>
@@ -57,7 +55,7 @@
     <script src="js/loaders/OBJLoader.js"></script>
 
     <script src="js/Detector.js"></script>
-    <script src="js/libs/stats.min.js"></script>
+    <!-- <script src="js/libs/stats.min.js"></script> -->
 
     <script>
 
@@ -69,12 +67,11 @@
           objRotate: [0, 0, 0],
 
           //todo: relative to size of window
-          canvasWidth: 1024,
-          canvasHeight: 1024,
-          topMargin: 386,
-          bottomMargin: 100,
+          canvasAspect: 1,
+          topMargin: 0.38,
+          bottomMargin: 0.1,
           leftMargin: 0,
-          rightMargin: 470
+          rightMargin: 0.46
         },
         mug: {
           file: 'models/mug.obj',
@@ -82,8 +79,7 @@
           objScale: [0.3, 0.3, 0.3],
           objRotate: [0, 0, 0],
 
-          canvasWidth: 612,
-          canvasHeight: 200,
+          canvasAspect: 3,
           topMargin: 0,
           bottomMargin: 0,
           leftMargin: 0,
@@ -95,11 +91,10 @@
           objScale: [10, 10, 10],
           objRotate: [Math.PI/2, 0, Math.PI],
 
-          canvasWidth: 500,
-          canvasHeight: 500,
-          topMargin: 50,
-          bottomMargin: 50,
-          leftMargin: 250,
+          canvasAspect: 1,
+          topMargin: 0.1,
+          bottomMargin: 0.1,
+          leftMargin: 0.5,
           rightMargin: 0
         }
       };
@@ -150,39 +145,70 @@
 
 
           // canvas crop
+
+          // find model info
           var model = modelInfo[name];
 
           // resize canvas
-          stage.setWidth(model.canvasWidth);
-          stage.setHeight(model.canvasHeight);
-          bgRect.setWidth(model.canvasWidth);
-          bgRect.setHeight(model.canvasHeight);
+          // find element sizes
+          var maxW = $('#editTexture').width();
+          var maxH = $('#editTexture').height();
+
+          // fit the aspect ratio to the element size
+          var aspectRatio = model.canvasAspect;
+          console.log(aspectRatio);
+          var croppedAspectRatio = (1 - model.leftMargin - model.rightMargin)
+            / (1 - model.topMargin - model.bottomMargin) * aspectRatio;
+          console.log('aa');
+            console.log(croppedAspectRatio);
+          var width = maxW;
+          var height = maxH;
+          if (maxH * croppedAspectRatio > maxW) {
+            width = maxW;
+            height = maxW * 1/croppedAspectRatio;
+          } else {
+            width = maxH * croppedAspectRatio;
+            height = maxH;
+          }
+
+          // (1-margins) = width/canvasWidth
+          // TODO: use power of 2 canvas width/height and scale to fit
+          var canvasWidth = width/(1 - model.leftMargin - model.rightMargin);
+          var canvasHeight = height/(1 - model.topMargin - model.bottomMargin);
+
+          console.log(canvasWidth);
+          console.log(canvasHeight);
+          stage.setWidth(canvasWidth);
+          stage.setHeight(canvasHeight);
+          bgRect.setWidth(canvasWidth);
+          bgRect.setHeight(canvasHeight);
 
           // reposition cropping divs
-          $('#container').css({
-              top: -model.topMargin,
-              left: -model.leftMargin
+          // TODO: onResize
+          $('#canvasContainer').css({
+              top: -canvasHeight * model.topMargin,
+              left: -canvasWidth * model.leftMargin
               });
 
           // resize cropping div
-          $('#container2').height(model.canvasHeight - model.topMargin - model.bottomMargin);
-          $('#container2').width(model.canvasWidth - model.leftMargin - model.rightMargin);
+          $('#cropCanvas').height(height);
+          $('#cropCanvas').width(width);
 
           // reposition overlay image , todo: if its outside
           console.log(dragImg.position());
           dragImg.position({
-              x: model.leftMargin,
-              y: model.topMargin});
+              x: canvasWidth * model.leftMargin,
+              y: canvasHeight * model.topMargin});
           console.log(dragImg.position());
           layer.draw();
 
-          //needs to happen when the canvas actually updates
+          // needs to happen when the canvas actually updates
           texture.needsUpdate = true;
         }
 
 
         renderer = new THREE.WebGLRenderer();
-        renderer.setSize( window.innerWidth, window.innerHeight );
+        renderer.setSize( window.innerWidth/2, window.innerHeight );
         container.appendChild( renderer.domElement );
 
         container.addEventListener( 'mousedown', onContainerMouseDown, false );
@@ -191,9 +217,9 @@
         window.addEventListener( 'resize', onWindowResize, false );
 
 
-        // create kinect canvas
+        // create kinetic canvas
         var stage = new Kinetic.Stage({
-          container: "container",
+          container: "canvasContainer",
           width: 1000,
           height: 1000
         });
@@ -276,21 +302,20 @@
         imageObj.onload = function() {
           drawImage(this);
         };
+        // todo: user upload image thing
         imageObj.src = 'tex/ooshirts-logo.png';
-
-
 
       }
 
       function onWindowResize() {
 
-        windowHalfX = window.innerWidth / 2;
+        windowHalfX = window.innerWidth / 4;
         windowHalfY = window.innerHeight / 2;
 
-        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.aspect = window.innerWidth/2 / window.innerHeight;
         camera.updateProjectionMatrix();
 
-        renderer.setSize( window.innerWidth, window.innerHeight );
+        renderer.setSize( window.innerWidth/2, window.innerHeight );
 
       }
 
